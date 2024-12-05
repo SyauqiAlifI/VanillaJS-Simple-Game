@@ -1,8 +1,8 @@
 export class Joystick {
   constructor(canvas) {
     this.canvas = canvas;
-    this.baseX = 400;
-    this.baseY = canvas.height + 350;
+    this.baseX = 100;
+    this.baseY = canvas.height - 100;
     this.stickX = this.baseX;
     this.stickY = this.baseY;
     this.baseRadius = 50;
