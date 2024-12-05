@@ -1,16 +1,22 @@
+import { isMobileDevice } from './utils/device.js';
+import { getRelativeCanvasPosition } from './utils/canvas.js';
+
 export class Joystick {
   constructor(canvas) {
     this.canvas = canvas;
-    this.baseX = 100;
-    this.baseY = canvas.height - 100;
-    this.stickX = this.baseX;
-    this.stickY = this.baseY;
     this.baseRadius = 50;
     this.stickRadius = 25;
     this.active = false;
     this.touchId = null;
+    this.visible = false;
+    this.baseX = 0;
+    this.baseY = 0;
+    this.stickX = 0;
+    this.stickY = 0;
 
-    this.setupTouchListeners();
+    if (isMobileDevice()) {
+      this.setupTouchListeners();
+    }
   }
 
   setupTouchListeners() {
@@ -23,22 +29,18 @@ export class Joystick {
     if (this.active) return;
 
     const touch = e.touches[0];
-    const rect = this.canvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
+    const pos = getRelativeCanvasPosition(this.canvas, touch.clientX, touch.clientY);
 
-    const distance = Math.sqrt(
-      Math.pow(x - this.baseX, 2) + 
-      Math.pow(y - this.baseY, 2)
-    );
-
-    if (distance <= this.baseRadius) {
-      this.active = true;
-      this.touchId = touch.identifier;
-      this.stickX = x;
-      this.stickY = y;
-      e.preventDefault();
-    }
+    // Create joystick at touch position
+    this.baseX = pos.x;
+    this.baseY = pos.y;
+    this.stickX = pos.x;
+    this.stickY = pos.y;
+    
+    this.active = true;
+    this.visible = true;
+    this.touchId = touch.identifier;
+    e.preventDefault();
   }
 
   handleTouchMove(e) {
@@ -47,17 +49,14 @@ export class Joystick {
     const touch = Array.from(e.touches).find(t => t.identifier === this.touchId);
     if (!touch) return;
 
-    const rect = this.canvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-
-    const dx = x - this.baseX;
-    const dy = y - this.baseY;
+    const pos = getRelativeCanvasPosition(this.canvas, touch.clientX, touch.clientY);
+    const dx = pos.x - this.baseX;
+    const dy = pos.y - this.baseY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance <= this.baseRadius) {
-      this.stickX = x;
-      this.stickY = y;
+      this.stickX = pos.x;
+      this.stickY = pos.y;
     } else {
       const angle = Math.atan2(dy, dx);
       this.stickX = this.baseX + Math.cos(angle) * this.baseRadius;
@@ -73,6 +72,7 @@ export class Joystick {
     const touches = Array.from(e.touches);
     if (!touches.some(t => t.identifier === this.touchId)) {
       this.active = false;
+      this.visible = false;
       this.touchId = null;
       this.stickX = this.baseX;
       this.stickY = this.baseY;
@@ -95,19 +95,47 @@ export class Joystick {
   }
 
   draw(ctx) {
-    // Draw base circle
+    if (!this.visible) return;
+
+    // Draw semi-transparent background overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    // Draw base circle with a glowing effect
     ctx.beginPath();
     ctx.arc(this.baseX, this.baseY, this.baseRadius, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.fill();
+    
+    // Add a subtle glow effect
+    const gradient = ctx.createRadialGradient(
+      this.baseX, this.baseY, this.baseRadius * 0.8,
+      this.baseX, this.baseY, this.baseRadius
+    );
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.stroke();
 
-    // Draw stick
+    // Draw stick with a glowing effect
     ctx.beginPath();
     ctx.arc(this.stickX, this.stickY, this.stickRadius, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.fill();
+    
+    // Add glow to the stick
+    const stickGradient = ctx.createRadialGradient(
+      this.stickX, this.stickY, this.stickRadius * 0.5,
+      this.stickX, this.stickY, this.stickRadius
+    );
+    stickGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+    stickGradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+    ctx.fillStyle = stickGradient;
+    ctx.fill();
+    
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.stroke();
   }

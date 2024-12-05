@@ -1,3 +1,5 @@
+import { isMobileDevice } from './utils/device.js';
+
 export class Controls {
   constructor(joystick) {
     this.up = false;
@@ -5,10 +7,13 @@ export class Controls {
     this.left = false;
     this.right = false;
     this.joystick = joystick;
-    this.setupListeners();
+    
+    if (!isMobileDevice()) {
+      this.setupKeyboardListeners();
+    }
   }
 
-  setupListeners() {
+  setupKeyboardListeners() {
     window.addEventListener('keydown', (e) => this.handleKeyDown(e));
     window.addEventListener('keyup', (e) => this.handleKeyUp(e));
   }
@@ -64,7 +69,7 @@ export class Controls {
       };
     }
 
-    // If no keyboard input, use joystick
+    // Use joystick input
     return this.joystick.getInput();
   }
 }
