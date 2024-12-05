@@ -9,11 +9,12 @@ export class Player {
   }
 
   update(controls) {
-    // Movement
-    if (controls.up) this.y -= this.speed;
-    if (controls.down) this.y += this.speed;
-    if (controls.left) this.x -= this.speed;
-    if (controls.right) this.x += this.speed;
+    // Get input from controls
+    const input = controls.getInput();
+    
+    // Update position based on input
+    this.x += input.x * this.speed;
+    this.y += input.y * this.speed;
 
     // Status effects
     this.hunger -= 0.02;

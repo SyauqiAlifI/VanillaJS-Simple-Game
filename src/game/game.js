@@ -2,24 +2,41 @@ import { Player } from './player.js';
 import { Controls } from './controls.js';
 import { Resource } from './resources.js';
 import { UI } from './ui.js';
+import { Joystick } from './joystick.js';
 
 export class Game {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    this.joystick = new Joystick(canvas);
     this.player = new Player();
-    this.controls = new Controls();
+    this.controls = new Controls(this.joystick);
     this.ui = new UI(canvas);
     this.resources = [];
     this.gameOver = false;
 
     this.setupCanvas();
     this.spawnResources();
+    this.setupMobileViewport();
   }
 
   setupCanvas() {
     this.canvas.width = 800;
     this.canvas.height = 600;
+  }
+
+  setupMobileViewport() {
+    const updateCanvasSize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const scale = Math.min(width / 800, height / 600);
+      
+      this.canvas.style.width = `${800 * scale}px`;
+      this.canvas.style.height = `${600 * scale}px`;
+    };
+
+    window.addEventListener('resize', updateCanvasSize);
+    updateCanvasSize();
   }
 
   spawnResources() {
@@ -78,6 +95,7 @@ export class Game {
     this.resources.forEach(resource => resource.draw(this.ctx));
     this.player.draw(this.ctx);
     this.ui.draw(this.ctx, this.player);
+    this.joystick.draw(this.ctx);
 
     if (this.gameOver) {
       this.ctx.fillStyle = 'white';

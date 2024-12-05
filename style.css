@@ -14,19 +14,24 @@ body {
   justify-content: center;
   min-width: 320px;
   min-height: 100vh;
+  touch-action: none;
+  overflow: hidden;
 }
 
 #gameCanvas {
   border: 2px solid #646cff;
   margin-bottom: 20px;
+  touch-action: none;
 }
 
 #instructions {
   text-align: center;
   color: #888;
   margin-top: 20px;
+  padding: 0 20px;
 }
 
 #instructions p {
   margin: 5px 0;
+  font-size: 14px;
 }

@@ -1,9 +1,10 @@
 export class Controls {
-  constructor() {
+  constructor(joystick) {
     this.up = false;
     this.down = false;
     this.left = false;
     this.right = false;
+    this.joystick = joystick;
     this.setupListeners();
   }
 
@@ -52,5 +53,18 @@ export class Controls {
         this.right = false;
         break;
     }
+  }
+
+  getInput() {
+    // Check keyboard input
+    if (this.up || this.down || this.left || this.right) {
+      return {
+        x: (this.right ? 1 : 0) - (this.left ? 1 : 0),
+        y: (this.down ? 1 : 0) - (this.up ? 1 : 0)
+      };
+    }
+
+    // If no keyboard input, use joystick
+    return this.joystick.getInput();
   }
 }
